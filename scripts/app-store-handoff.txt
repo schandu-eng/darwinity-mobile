@@ -1,0 +1,186 @@
+Darwinity — App Store Connect handoff (first iOS upload)
+=======================================================
+
+App identity (already configured in repo)
+---------------------------------------
+App name: Darwinity
+Bundle ID: com.darwinity.mobile
+ASC app ID: YOUR_ASC_APP_ID
+Apple ID (ASC login): YOUR_APPLE_ID@example.com
+Marketing version: 1.0.4  (must match app.config.js — do NOT leave Connect on 1.0)
+iOS build number: 40 (CFBundleVersion; Apple only requires it to increase later)
+
+DISPLAY NAME — Darwinity only
+-----------------------------
+App Store Connect → App Information → Name = Darwinity
+(Account holder can stay Account Holder; users see the app name, not the login.)
+
+Privacy policy: https://www.darwinity.com/privacy-notice
+Terms: https://www.darwinity.com/terms-of-service
+Support email: support@example.com
+Support URL: https://www.darwinity.com/support
+Website: https://www.darwinity.com
+
+Store listing copy (paste into App Store Connect → iOS App Version)
+-----------------------------------------------------------------
+Language: English (U.S.)
+
+Promotional Text (max 170):
+Stop rewriting notes. Upload a lecture, PDF, or YouTube link — Darwinity builds notes, flashcards, quizzes, and podcasts.
+
+Description (max 4000):
+Darwinity helps students stop rewriting and start remembering.
+
+Upload a lecture recording, PDF, or YouTube link once. Darwinity builds study materials from what you were actually taught:
+
+• AI notes from your uploads
+• Flashcards for spaced repetition
+• Quizzes to test recall
+• Podcasts for learning on the go
+• Exam prep tools for practice tests
+
+Free to start. Upgrade to Pro for higher limits and premium features.
+
+Darwinity is the study app at darwinity.com.
+
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://www.darwinity.com/privacy-notice
+
+Keywords (max 100, no spaces after commas):
+study,notes,flashcards,quiz,lecture,PDF,YouTube,exam,podcast,students,notetaker,revision,college
+
+Support URL: https://www.darwinity.com/support
+Marketing URL: https://www.darwinity.com
+Copyright: 2026 Darwinity
+Version: 1.0.4
+
+Leave empty: Routing App Coverage File, App Clip, iMessage App, Game Center.
+
+App Review Information
+----------------------
+Sign-in required: YES (checked)
+
+Demo username / password: [DEMO_PASSWORD] with a real reviewer account that already has
+sample notes, flashcards, a quiz, and a podcast generated. Do not use a
+production student account. Do not complete deletion on this account.
+
+Guideline 2.1 Information Needed (2026-09-11) — paste the block below into
+BOTH the Resolution Center reply AND App Review Information → Notes.
+Attach a physical-device screen recording to the Resolution Center reply.
+Replace [DEMO_EMAIL] / [DEMO_PASSWORD] before sending.
+
+----- BEGIN APP REVIEW NOTES -----
+Thank you. Darwinity 1.0.4 (39) is complete and ready for customers.
+
+1) Screen recording
+A physical-iPhone recording on the latest iOS is attached to the Resolution Center reply. It starts at launch and shows: email/password sign-in (not Google), home study hub, opening a set, Notes, Flashcards, Quiz, Podcast playback, optional Pro paywall (no purchase), Sign Up, and Settings → Delete account. Please cancel deletion on the demo account; create a new account via Sign Up if you need to test a full delete.
+
+2) Purpose and audience
+Personal study app for high-school, college, and adult learners. Students currently rewrite lectures by hand or juggle separate note/flashcard/quiz apps. Darwinity takes one source they were taught from (lecture recording, PDF/slides, or YouTube link) and generates notes, flashcards, quizzes, podcast audio, and exam-prep practice. The free plan is enough to review; Pro is an optional subscription.
+
+3) How to access
+Sign-in is required. Use email + password (Google Sign-In is not shown on this iOS build):
+Username: [DEMO_EMAIL]
+Password: [DEMO_PASSWORD]
+This is a free-plan reviewer account with sample notes, flashcards, a quiz, and a podcast already generated.
+Path: Launch → Sign In → open a set → Notes / Flashcards / Quizzes / Podcast. Home can Upload PDF, Record audio, or Paste a YouTube URL. Settings → Upgrade shows the optional paywall. Restore Purchases is on Account details. Delete account: Settings → Delete account (or Account details). Do not complete deletion on the demo account.
+
+4) External services
+Darwinity API/website (darwinity.com); Apple IAP via RevenueCat (darwinity_pro_monthly, darwinity_pro_yearly); OpenAI; Google Gemini / Vertex AI; Google Cloud Text-to-Speech; YouTube oEmbed/captions; Amazon S3; Mixpanel; Statsig; OneSignal and Resend. Stripe/Razorpay are not used for iOS App Store purchases. Sign in with Apple and Google Sign-In are both offered on this iOS build.
+
+5) Regional differences
+Core study features work the same in all regions. Users may set a study language. A 1-day Pro trial is offered in most countries; it is not offered in India (direct-pay intro offer), Pakistan, Sri Lanka, Nepal, or Bangladesh. Subscription prices follow Apple storefronts. No geo-blocked catalog.
+
+6) Regulated / protected material
+General education tool, not a licensed school, medical, legal, or financial service. Users upload their own materials for personal use. Operator: darwinity.com. Privacy https://www.darwinity.com/privacy-notice Terms https://www.darwinity.com/terms-of-service Support support@example.com
+Not a social network. Uploads are private to the account, so public UGC report/block UI does not apply. Users can delete their materials and their account in-app.
+----- END APP REVIEW NOTES -----
+
+Contact: first/last name of whoever answers Apple email same-day.
+Email: YOUR_APPLE_ID@example.com or support@example.com
+Phone: a number Apple can reach (required in practice).
+
+Release: choose "Manually release this version" for the first upload.
+
+Encryption: ITSAppUsesNonExemptEncryption is already false in app.config.js.
+When asked, answer No (HTTPS only). No export-compliance file.
+
+Screenshots
+-----------
+Required: iPhone 6.5" — at least 1, ideally 4–8.
+Accepted sizes: 1242×2688, 2688×1242, 1284×2778, or 2778×1284.
+Ready to upload (1284×2778): store-assets/app-store/iphone-6.5/
+  01-hub.png, 02-upload.png, 03-notes.png, 04-flashcards.png, 05-quiz.png, 06-podcast.png
+iPad: app supports tablets (supportsTablet: true) — add 12.9"/13" iPad screenshots if Connect asks.
+
+App Store Connect checklist (manual — in order)
+----------------------------------------------
+PHASE 1 — Listing (no binary yet)
+[ ] Distribution → iOS App Version → change Version from 1.0 to 1.0.4, then Save
+[ ] Paste promotional text, description, keywords, URLs, copyright
+[ ] Upload iPhone 6.5" screenshots (and iPad if prompted)
+[ ] App Review contact + demo username/password + notes
+[ ] Release = Manually release this version
+[ ] App Privacy questionnaire
+[ ] Age rating / category (Education)
+[ ] Skip App Clip, iMessage, Game Center
+
+PHASE 2 — First binary
+[ ] cd darwinity-mobile
+[ ] npm run appstore:preflight
+[ ] Confirm EAS secrets include:
+      REVENUECAT_IOS_API_KEY (appl_…)
+      API_BASE_URL
+      SITE_ORIGIN
+      (Google iOS Sign-In on; Sign in with Apple enabled via usesAppleSignIn + expo-apple-authentication)
+[ ] npm run eas:login
+[ ] npm run eas:build:ios
+    First run: EAS will ask to create Apple Distribution cert + App Store profile.
+    Use the your Apple ID. Complete 2FA on the phone.
+[ ] Wait for the build to finish on expo.dev
+[ ] npm run eas:submit:ios
+    Uploads the .ipa to App Store Connect (TestFlight / this version).
+[ ] App Store Connect → Build → select the 1.0.4 build after processing (~5–30 min)
+[ ] Encryption question: No
+
+PHASE 3 — Subscriptions (if Pro is in the binary)
+[ ] App Store Connect → Subscriptions: monthly + yearly
+    Recommended product IDs (match Play / RevenueCat):
+      darwinity_pro_monthly
+      darwinity_pro_yearly
+[ ] Link products in RevenueCat (iOS app)
+[ ] Paid Apps Agreement + banking/tax must be Active or IAP review stalls
+[ ] First subscription must be submitted with this app version
+
+PHASE 4 — Resubmit after Guideline 2.1 Information Needed
+[ ] Create a free demo account with sample notes, flashcards, quiz, podcast already generated
+[ ] Put that email + password in App Review Information (Sign-in required = YES)
+[ ] npm run eas:build:ios   (build 39 — includes in-app Delete account)
+[ ] npm run eas:submit:ios
+[ ] App Store Connect → Build → select 1.0.4 (39) after processing; encryption No
+[ ] Record on a physical iPhone (latest iOS), not Simulator. Script:
+    1. Cold-launch the app
+    2. Sign In with the demo email/password (not Google)
+    3. Open a study set → Notes, Flashcards, Quiz, Podcast play
+    4. Settings → Upgrade (show paywall, do not purchase)
+    5. Settings → Delete account → show the confirm sheet → Cancel
+    6. Log out → show Sign Up on the auth screen
+[ ] Paste the App Review notes (with real demo credentials) into:
+    a) App Review Information → Notes
+    b) Resolution Center reply to Apple
+[ ] Attach the screen recording to the Resolution Center reply
+[ ] Submit for Review again (keep Manually release this version)
+
+PHASE 5 — After approval
+[ ] Manually release from App Store Connect
+[ ] Then set APP_STORE.apple in web brand.js (currently null)
+
+EAS commands (run one per line — no trailing comments)
+------------------------------------------------------
+# From repo root:
+#   cd darwinity-mobile
+
+npm run eas:login
+npm run appstore:preflight
+npm run eas:build:ios
+npm run eas:submit:ios

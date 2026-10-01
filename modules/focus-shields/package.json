@@ -1,0 +1,14 @@
+{
+  "name": "focus-shields",
+  "version": "0.1.0",
+  "description": "Block distracting apps during a Darwinity pomodoro",
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "homepage": "https://www.darwinity.com",
+  "author": "Darwinity",
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}

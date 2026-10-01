@@ -1,0 +1,162 @@
+Darwinity — Google Play Console handoff
+======================================
+
+App identity (already configured in repo)
+---------------------------------------
+App name: Darwinity
+Package name: com.darwinity.mobile
+
+DISPLAY NAME — Darwinity only (not the Play Console account name)
+-----------------------------------------------------------------
+The APK/AAB label is Darwinity. Play Store download UI uses Console
+metadata, not the binary. If testers see "Account Holder Name" while
+downloading, fix both of these in Play Console:
+
+1. Grow → Store presence → Main store listing → App name
+   Set to: Darwinity
+   (Internal testing still uses this title. If it is blank, Play
+   falls back to the developer account name.)
+
+2. Settings → Developer account → About you → Developer name
+   Change from the personal account name to: Darwinity
+   Google reviews this; it then shows as "Offered by Darwinity".
+   The Play Console login name can stay personal — only the public
+   developer name is shown to users.
+Privacy policy: https://www.darwinity.com/privacy-notice
+Terms: https://www.darwinity.com/terms-of-service
+Support email: support@example.com
+Support URL: https://www.darwinity.com/support
+Website: https://www.darwinity.com
+
+Store listing copy (paste into Play Console)
+--------------------------------------------
+Short description (max 80 chars):
+Turn lectures, PDFs & YouTube into notes, flashcards, quizzes & podcasts.
+
+Full description:
+Darwinity helps students stop rewriting and start remembering.
+
+Upload a lecture recording, PDF, or YouTube link once. Darwinity builds study materials from what you were actually taught:
+
+• AI notes from your uploads
+• Flashcards for spaced repetition
+• Quizzes to test recall
+• Podcasts for learning on the go
+• Exam prep tools for practice tests
+
+Free to start. Upgrade to Pro for higher limits and premium features.
+
+Darwinity is the study app at darwinity.com.
+
+Category: Education
+Tags: study, notes, flashcards, quiz, lecture, PDF, exam prep
+
+Graphics you still need to upload
+---------------------------------
+1. App icon — use assets/icon.png (512x512 export if needed)
+2. Feature graphic — 1024 x 500 px (not in repo; design one)
+3. Phone screenshots — at least 2, ideally 4–8 from a real device/emulator
+4. Optional: 7-inch and 10-inch tablet screenshots
+
+Recommended subscription product IDs
+----------------------------------
+Create under Monetize → Products → Subscriptions:
+
+Monthly: darwinity_pro_monthly
+Yearly:  darwinity_pro_yearly
+
+After creating in Play Console:
+1. Link products in RevenueCat (Android app)
+2. Set play_store_product_id on billing plans in admin (admin.darwinity.com)
+3. Put RevenueCat public SDK keys into EAS production env (required — empty keys break Play IAP):
+     eas env:create --name REVENUECAT_ANDROID_API_KEY --value goog_… --environment production
+     eas env:create --name REVENUECAT_IOS_API_KEY --value appl_… --environment production
+   Then rebuild the AAB (keys are baked via app.config.js extra).
+
+Play Console checklist (manual — in order)
+------------------------------------------
+PHASE 1 — First upload
+[ ] Test and release → Testing → Internal testing → Create release
+[ ] Upload .aab from: npm run eas:build:android
+[ ] Add yourself as internal tester and install from Play link
+
+PHASE 2 — Finish setting up your app (unlocks closed testing)
+[ ] App access → All functionality requires sign-in
+    Provide test account: email + password for Google reviewers
+    Also note Google Sign-In is supported
+[ ] Ads → No, my app does not contain ads
+[ ] Content rating → Complete questionnaire (Education app, no violence, etc.)
+[ ] Target audience → 13+ (students); not primarily for children under 13
+[ ] News app → No
+[ ] COVID-19 apps → No
+[ ] Data safety (see section below)
+[ ] Government apps → No
+[ ] Financial features → No (subscriptions are not "financial features" here)
+[ ] Store listing → App name MUST be Darwinity (not the account holder name)
+[ ] Developer account → About you → Developer name = Darwinity
+[ ] Store listing → descriptions, graphics, contact email
+[ ] Privacy policy URL → https://www.darwinity.com/privacy-notice
+
+PHASE 3 — Closed testing (required before production)
+[ ] Create closed testing track
+[ ] Add 12+ testers (email list or Google Group)
+[ ] Run closed test for minimum required period
+[ ] Fix crashes/feedback
+[ ] Apply for production access when eligible
+
+PHASE 4 — Subscriptions & billing
+[ ] Monetize → Products → Subscriptions → create monthly + yearly
+[ ] Settings → License testing → add tester Gmail accounts
+[ ] RevenueCat → connect Google Play (service account)
+[ ] Backend → set GOOGLE_SERVICE_ACCOUNT_PATH for purchase verification
+[ ] Admin → set play_store_product_id on Pro plans
+
+PHASE 5 — Google Sign-In (Android)
+[ ] Confirm the installed app is ≥ 1.0.3 / versionCode 44 (native @react-native-google-signin).
+    Browser page "Access blocked… Error 400: invalid_request" = OLD AuthSession binary — reinstall.
+[ ] Google Cloud Console → APIs & Services → Credentials
+[ ] Create Android OAuth client for package com.darwinity.mobile
+[ ] Add BOTH SHA-1 fingerprints to that Android client:
+    - Upload key (EAS production AAB signature), currently:
+      A9:86:B0:D3:E9:CA:EF:DA:E3:77:28:B0:36:AB:B5:DB:7A:08:61:C7
+      Re-check: npm run google:android-check -- --aab-url <eas-artifact-url>
+    - App signing key: Play Console → Setup → App integrity → App signing key certificate → SHA-1
+      (required once Play App Signing is enabled; store builds use this cert at runtime)
+[ ] Keep a Web OAuth client (GOOGLE_WEB_CLIENT_ID) — native Sign-In needs it for idToken
+    Do NOT pass the Android client ID as webClientId
+[ ] Set GOOGLE_ANDROID_CLIENT_ID in .env.production (Console client for package+SHA-1)
+[ ] Rebuild the Android binary after changing Google Sign-In native module / config plugin
+    (OTA update alone will NOT pick up native Google Sign-In)
+[ ] For quick device test: eas build -p android --profile preview (APK), sideload, then Google Sign-In
+[ ] For Play: submit AAB ≥ versionCode 44, wait for rollout, uninstall old app, install from Play
+
+Data safety form (draft answers)
+--------------------------------
+Collects: Yes
+Shared with third parties: Yes (analytics, payment processors)
+
+Data types to declare:
+- Personal info: Name, Email address (account creation / sign-in)
+- App activity: In-app actions, App interactions (analytics)
+- User-generated content: Files and docs (uploaded study materials)
+- Audio: Voice or sound recordings (lecture recording feature)
+- Device or other IDs: For analytics
+
+Purposes: App functionality, Analytics, Account management, Fraud prevention
+Optional: Developer communications
+
+Security: Data encrypted in transit (HTTPS)
+Delete account URL: https://www.darwinity.com/delete-account
+Deletion: In-app Settings → Delete account. Email fallback via the delete-account page (support@example.com)
+
+EAS commands (run one per line — no trailing comments)
+------------------------------------------------------
+# From repo root:
+#   cd darwinity-mobile
+# If your prompt already is already in darwinity-mobile, skip cd.
+
+npm run eas:login
+npm run eas:init
+npm run play:preflight
+npm run eas:build:android
+npm run eas:submit:android

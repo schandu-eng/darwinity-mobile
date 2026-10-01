@@ -1,0 +1,14 @@
+{
+  "name": "study-alarm",
+  "version": "0.1.0",
+  "description": "Study alarm that rings until 10 quiz or card reviews",
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "homepage": "https://www.darwinity.com",
+  "author": "Darwinity",
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}

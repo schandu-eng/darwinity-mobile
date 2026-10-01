@@ -1,0 +1,42 @@
+# NOTE: When this app is the git root, EAS reads this file.
+# Keep secrets, credentials, and local env files out of uploads.
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+builds/
+
+# Native build artifacts
+ios/build/
+ios/Pods/
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+
+# Logs and temporary files
+*.log
+.DS_Store
+
+# Environment / secrets
+.env
+.env.*
+!.env.*.example
+secrets/
+credentials.json
+*.pem
+*.key
+*.p12
+*.mobileprovision
+*.jks
+*.keystore
+
+# Docs / editor (not needed in the archive)
+.vscode/
+.idea/
+*.code-workspace

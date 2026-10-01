@@ -1,0 +1,58 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+builds/
+*.aab
+*.apk
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Generated native directories (created by expo prebuild)
+ios/
+android/
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files — never commit real secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Google Play submit credentials (never commit)
+secrets/
+
+# typescript
+*.tsbuildinfo
+
+# Editor
+*.code-workspace
+.idea/
+.vscode/
+
+# Local signing credentials (never commit)
+credentials.json
