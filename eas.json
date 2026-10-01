@@ -46,7 +46,11 @@
         "credentialsSource": "local"
       },
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "GOOGLE_SIGN_IN_ENABLED": "true",
+        "GOOGLE_WEB_CLIENT_ID": "423450423541-nfgg16n2fngateufa4ti2ing862hj0gn.apps.googleusercontent.com",
+        "GOOGLE_IOS_CLIENT_ID": "423450423541-26cu96c22ph78igapq312of4ft46tmk3.apps.googleusercontent.com",
+        "GOOGLE_ANDROID_CLIENT_ID": "423450423541-sf4ff40oopsue98vrmjer9fj6q5lli3n.apps.googleusercontent.com"
       }
     }
   },
@@ -54,9 +58,13 @@
     "production": {
       "android": {
         "track": "internal",
-        "releaseStatus": "completed"
+        "releaseStatus": "completed",
+        "serviceAccountKeyPath": "./secrets/google-play-service-account.json"
       },
-      "ios": {}
+      "ios": {
+        "appleId": "taniyagupta2704@gmail.com",
+        "ascAppId": "6809006189"
+      }
     }
   }
 }

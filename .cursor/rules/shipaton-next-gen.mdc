@@ -1,0 +1,21 @@
+---
+description: Shipaton 2026 Next Gen Award constraints for this native app
+alwaysApply: true
+---
+
+# Shipaton Next Gen (native)
+
+When working in this repo in the context of RevenueCat Shipaton 2026, treat **Next Gen Award** as the target category unless the user explicitly says otherwise.
+
+## Hard constraints
+
+- Prefer changes that keep the Project clearly **demoable in under 2 minutes** on iOS/Android and understandable from the **public repo**.
+- Keep **RevenueCat** monetization (IAP / subscription / web purchase / RevenueCat Ads) present and explainable in code and UI.
+- Do **not** remove or obscure the **MIT `LICENSE`** or break GitHub license detection.
+- Do **not** commit secrets (`.env*`, credentials, keystores, API keys).
+- Do **not** add influencer likeness/branding or other IP we do not own.
+- Store listing / promo codes are **optional** for Next Gen; do not block Next Gen work on App Store / Play release.
+
+## Source of truth
+
+Read `SHIPATON_NEXT_GEN.md` for the Next Gen–only rules summary. Official Devpost rules override that summary if they conflict.

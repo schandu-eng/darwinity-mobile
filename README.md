@@ -69,6 +69,12 @@ Issues and PRs are welcome. Please:
 2. Run `npm run lint` before opening a PR.
 3. Prefer small, focused changes with a clear description of behavior.
 
+## Shipaton 2026 (Next Gen)
+
+This native client is the public open-source submission surface for RevenueCat **Shipaton 2026 — Next Gen Award** (video + repo judging; no store listing required for that category).
+
+See [SHIPATON_NEXT_GEN.md](./SHIPATON_NEXT_GEN.md) for Next Gen–only eligibility, submission, and judging rules (summary; Official Rules on Devpost control).
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
