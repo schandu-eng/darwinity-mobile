@@ -36,12 +36,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files — never commit real secrets
+# Env files — never commit (including examples)
 .env
-.env.local
-.env.*.local
-.env.development
-.env.production
+.env.*
 
 # Google Play submit credentials (never commit)
 secrets/

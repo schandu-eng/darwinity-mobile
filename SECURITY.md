@@ -1,11 +1,11 @@
 # Security
 
-## Secrets
+## Secrets and env files
 
-- Never commit real `.env.development` / `.env.production` files, keystores, `.p8` / `.p12` files, or Google Play service-account JSON.
-- Use `.env.*.example` as the source of required variable names with empty or placeholder values only.
-- `EXPO_PUBLIC_*` values are embedded in the client bundle. Only put public-safe keys there (Mixpanel project token, Statsig client key, RevenueCat public SDK keys, Google OAuth client IDs).
-- Do **not** put Stripe/Razorpay secret keys, JWT secrets, webhook secrets, admin passwords, or AutoProctor client secrets in mobile env files.
+- This repo must never contain env files or env templates (`.env`, `.env.*`).
+- Create private `.env.development` / `.env.production` only on your machine, or use EAS Environment variables for cloud builds.
+- Never commit keystores, `.p8` / `.p12` files, `credentials.json`, or Google Play service-account JSON (`secrets/`).
+- `EXPO_PUBLIC_*` values are embedded in the client bundle. Only put public-safe keys there.
 
 ## If a secret was committed
 

@@ -15,7 +15,7 @@ Shared study logic (quiz grading, PDF export helpers, feature tours, games) live
 
 - Node 20+
 - [Expo CLI](https://docs.expo.dev/get-started/installation/) / EAS CLI for store builds
-- A Darwinity API (or compatible backend) reachable at `API_BASE_URL`
+- A Darwinity API (or compatible backend)
 
 ## Setup
 
@@ -23,11 +23,18 @@ Shared study logic (quiz grading, PDF export helpers, feature tours, games) live
 git clone https://github.com/schandu-eng/darwinity-mobile.git
 cd darwinity-mobile
 npm install
-
-cp .env.development.example .env.development
-cp .env.production.example .env.production
-# Edit the env files with your API URL, OAuth client IDs, and keys
 ```
+
+Configuration is **local-only**. This repository does not ship env files or env templates.
+
+Create private env files on your machine (they are gitignored):
+
+- `.env.development` — local Expo runs
+- `.env.production` — production-shaped local / store builds
+
+Or inject the same keys via [EAS Environment variables](https://docs.expo.dev/eas/environment-variables/) for cloud builds. Never commit env files, `credentials.json`, or `secrets/`.
+
+`app.config.js` reads those values at build time when present.
 
 ## Run
 
@@ -42,22 +49,6 @@ Production-shaped local runs:
 ```bash
 npm run start:prod
 ```
-
-## Configuration
-
-| Variable | Purpose |
-| --- | --- |
-| `API_BASE_URL` | Backend base URL |
-| `GOOGLE_*_CLIENT_ID` | Google OAuth clients |
-| `GOOGLE_SIGN_IN_ENABLED` | Show native Google Sign-In when clients are valid |
-| `REVENUECAT_*_API_KEY` | Public RevenueCat SDK keys (`appl_` / `goog_`) |
-| `EXPO_PUBLIC_MIXPANEL_TOKEN` | Analytics (optional) |
-| `EXPO_PUBLIC_STATSIG_CLIENT_KEY` | Feature gates (optional) |
-| `EXPO_PROJECT_ID` | Expo / EAS project UUID |
-
-Store builds should inject secrets via [EAS Environment variables](https://docs.expo.dev/eas/environment-variables/), not committed `.env` files.
-
-`eas.json` submit fields (`appleId`, `ascAppId`, Play service account path) are placeholders — replace them locally or via EAS secrets. Never commit `credentials.json` or `secrets/`.
 
 ## Project layout
 
@@ -74,7 +65,7 @@ scripts/       # release preflight / store handoff templates
 
 Issues and PRs are welcome. Please:
 
-1. Keep secrets out of commits (`.env*`, keystores, service accounts).
+1. Keep secrets out of commits (any `.env*`, keystores, service accounts).
 2. Run `npm run lint` before opening a PR.
 3. Prefer small, focused changes with a clear description of behavior.
 
