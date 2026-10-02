@@ -1,15 +1,32 @@
 /** Global kill switch: no new trials in any market (CTAs, splash, onboarding).
  *  Keep in sync with backend/payments/trial_policy.py TRIALS_OFFERED.
  */
-export const TRIALS_OFFERED = false;
+export const TRIALS_OFFERED = true;
 export const INDIA_TRIAL_ENABLED = false;
 
 const INDIA_ALIASES = new Set(['india', 'in', 'ind']);
 const NO_TRIAL_ALIASES = new Set([
+  // South Asia
   'pakistan', 'pk',
   'sri lanka', 'srilanka', 'lk',
   'nepal', 'np',
   'bangladesh', 'bd',
+  'maldives', 'mv',
+  // Africa
+  'nigeria', 'ng',
+  'kenya', 'ke',
+  'south africa', 'southafrica', 'za',
+  'egypt', 'eg',
+  'ghana', 'gh',
+  'ethiopia', 'et',
+  'uganda', 'ug',
+  'tanzania, united republic of tanzania', 'tanzania', 'tz',
+  'algeria', 'dz',
+  'morocco', 'ma',
+  'sudan', 'sd',
+  'somalia', 'so',
+  'zambia', 'zm',
+  'mauritius', 'mu',
 ]);
 
 function countryKey(country?: string | null): string {
