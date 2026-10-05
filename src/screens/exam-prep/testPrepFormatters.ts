@@ -112,7 +112,10 @@ export function examCountdownTone(
   return 'ok';
 }
 
-/** Local midnight at the start of an ISO exam date (YYYY-MM-DD). Null if missing/invalid. */
+/**
+ * Local end-of-day for an ISO exam date (YYYY-MM-DD): midnight at the start of the next day.
+ * Date-only exam targets mean "sometime on that day", so countdown includes the exam day.
+ */
 export function getExamDeadlineMs(examDate?: string | null): number | null {
   if (!examDate) return null;
   const raw = String(examDate).trim().slice(0, 10);
@@ -120,6 +123,7 @@ export function getExamDeadlineMs(examDate?: string | null): number | null {
   const [y, m, d] = raw.split('-').map(Number);
   const exam = new Date(y, m - 1, d);
   if (Number.isNaN(exam.getTime())) return null;
+  exam.setDate(exam.getDate() + 1);
   return exam.getTime();
 }
 
@@ -132,7 +136,7 @@ export type ExamRemainingParts = {
   seconds: number;
 };
 
-/** Live remaining breakdown until exam local midnight. */
+/** Live remaining breakdown until end of exam day (local). */
 export function getExamRemainingParts(
   examDate?: string | null,
   now: Date = new Date()
