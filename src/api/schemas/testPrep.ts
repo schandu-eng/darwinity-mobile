@@ -87,8 +87,23 @@ export const ExamSessionResponseSchema = z.object({
   session: ExamEvalSessionSchema,
 });
 
+export const ExamReviseItemSchema = z.object({
+  content_id: z.number(),
+  title: z.string(),
+  due_count: z.number().optional(),
+  study_queue_count: z.number().optional(),
+});
+
+export const ExamReviseSummarySchema = z.object({
+  total_due: z.number().optional(),
+  total_study_queue: z.number().optional(),
+  items: z.array(ExamReviseItemSchema).optional(),
+});
+
 export type ExamTargetSummary = z.infer<typeof ExamTargetSummarySchema>;
 export type ExamTargetDetail = z.infer<typeof ExamTargetDetailSchema>;
 export type ExamEvalQuestion = z.infer<typeof ExamEvalQuestionSchema>;
 export type ExamEvalSession = z.infer<typeof ExamEvalSessionSchema>;
 export type ExamEvalSessionSummary = z.infer<typeof ExamEvalSessionSummarySchema>;
+export type ExamReviseItem = z.infer<typeof ExamReviseItemSchema>;
+export type ExamReviseSummary = z.infer<typeof ExamReviseSummarySchema>;

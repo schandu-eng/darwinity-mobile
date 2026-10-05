@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -18,6 +18,7 @@ import {
   Folder,
   GraduationCap,
   Plus,
+  RotateCcw,
   Sparkles,
   Trash2,
 } from '@/icons';
@@ -27,6 +28,7 @@ import {
   TEST_PREP_TARGET_KEY,
   useExamTarget,
   useExamSessions,
+  useExamReviseSummary,
   useInvalidateExamPrep,
 } from '@/api/queries/testPrep';
 import { prefetchContentDetail } from '@/api/queries/content';
@@ -36,6 +38,7 @@ import { lightTheme, darkTheme } from '@/theme';
 import { HubHomeHeader } from '@/components/home/HubHomeHeader';
 import { PanelLoadError } from '@/components/ui/PanelLoadError';
 import ExamPrepProGate, { useExamPrepAccess } from '@/components/exam-prep/ExamPrepProGate';
+import ExamDueClock from '@/components/exam-prep/ExamDueClock';
 import ExamUploadModal from '@/components/exam-prep/ExamUploadModal';
 import EvalPlayer from '@/components/exam-prep/EvalPlayer';
 import { analytics } from '@/analytics/analytics';
@@ -74,6 +77,10 @@ const ExamPrepTargetScreen: React.FC = () => {
     allowed ? targetId : null,
     allowed ? userId : null
   );
+  const { data: reviseSummary, refetch: refetchRevise } = useExamReviseSummary(
+    allowed ? targetId : null,
+    allowed ? userId : null
+  );
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pyqs, setPyqs] = useState('');
@@ -93,6 +100,25 @@ const ExamPrepTargetScreen: React.FC = () => {
     if (target?.pyqs_text != null) setPyqs(target.pyqs_text);
   }, [target?.pyqs_text]);
 
+  const hasMaterials = useMemo(() => {
+    if (!target) return false;
+    return (
+      (target.content_count || 0) > 0 ||
+      (target.folder_count || 0) > 0 ||
+      (target.contents || []).length > 0 ||
+      (target.folders || []).length > 0
+    );
+  }, [target]);
+
+  const hasPyqs = useMemo(() => {
+    if (!target) return false;
+    return Boolean((pyqs || target.pyqs_text || '').trim()) || Boolean(target.has_pyqs);
+  }, [target, pyqs]);
+
+  const canGeneratePractice = hasMaterials || hasPyqs;
+
+  const reviseQueueTotal = reviseSummary?.total_study_queue || 0;
+
   const patchTarget = useCallback(
     (next: ExamTargetDetail | ((prev: ExamTargetDetail | undefined) => ExamTargetDetail | undefined)) => {
       queryClient.setQueryData<ExamTargetDetail>([TEST_PREP_TARGET_KEY, targetId, userId], (prev) =>
@@ -101,6 +127,15 @@ const ExamPrepTargetScreen: React.FC = () => {
     },
     [queryClient, targetId, userId]
   );
+
+  const ensureCanGenerate = useCallback(() => {
+    if (canGeneratePractice) return true;
+    Alert.alert(
+      'Add materials first',
+      'Add notes or folders, or paste PYQs, before generating practice'
+    );
+    return false;
+  }, [canGeneratePractice]);
 
   const startEval = useCallback(
     async ({
@@ -115,6 +150,7 @@ const ExamPrepTargetScreen: React.FC = () => {
       timed?: boolean;
     }) => {
       if (!userId) return;
+      if (!ensureCanGenerate()) return;
       setStarting(true);
       try {
         const result = await testPrepService.startEvaluate(targetId, {
@@ -124,7 +160,7 @@ const ExamPrepTargetScreen: React.FC = () => {
           difficulty,
         });
         if (!result.success || !result.data) {
-          Alert.alert('Failed to start evaluation', result.message || 'Try again');
+          Alert.alert('Failed to start practice', result.message || 'Try again');
           return;
         }
         const deadlineAt = timed
@@ -150,31 +186,32 @@ const ExamPrepTargetScreen: React.FC = () => {
         setStarting(false);
       }
     },
-    [targetId, userId, refetchSessions]
+    [targetId, userId, refetchSessions, ensureCanGenerate]
   );
 
   const startQuickPractice = useCallback(() => {
+    if (!ensureCanGenerate()) return;
     void startEval({
       evalType: 'mcq',
       questionCount: 10,
       difficulty: 'mixed',
       timed: false,
     });
-  }, [startEval]);
+  }, [startEval, ensureCanGenerate]);
+
+  const handleOpenGenerate = useCallback(() => {
+    if (!ensureCanGenerate()) return;
+    setUploadOpen(true);
+  }, [ensureCanGenerate]);
 
   useEffect(() => {
     if (isLoading || !target || starting || phase !== 'setup') return;
     if (autostartDoneRef.current) return;
     if (!autostart) return;
-    const hasMaterial =
-      (target.content_count || 0) > 0 ||
-      (target.folder_count || 0) > 0 ||
-      (target.contents || []).length > 0 ||
-      (target.folders || []).length > 0;
-    if (!hasMaterial) return;
+    if (!hasMaterials) return;
     autostartDoneRef.current = true;
     startQuickPractice();
-  }, [isLoading, target, starting, phase, autostart, startQuickPractice]);
+  }, [isLoading, target, starting, phase, autostart, startQuickPractice, hasMaterials]);
 
   const savePyqs = async () => {
     if (!userId) return;
@@ -209,6 +246,7 @@ const ExamPrepTargetScreen: React.FC = () => {
           }
         : prev
     );
+    void refetchRevise();
   };
 
   const removeFolder = async (folderId: number) => {
@@ -227,6 +265,7 @@ const ExamPrepTargetScreen: React.FC = () => {
           }
         : prev
     );
+    void refetchRevise();
   };
 
   const openNote = (contentId: number) => {
@@ -238,13 +277,25 @@ const ExamPrepTargetScreen: React.FC = () => {
     });
   };
 
+  const openCards = (contentId: number) => {
+    if (!navigationRef.isReady()) return;
+    void prefetchContentDetail(contentId, userId);
+    navigationRef.navigate('App', {
+      screen: 'Content',
+      params: {
+        screen: 'ContentDetail',
+        params: { contentId, initialTab: 'flashcards' },
+      },
+    });
+  };
+
   const openSession = async (summaryId: number) => {
     if (!userId) return;
     setOpeningId(summaryId);
     try {
       const data = await testPrepService.getSession(summaryId, userId);
       if (!data.success || !data.data) {
-        Alert.alert('Could not open test', data.message || 'Try again');
+        Alert.alert('Could not open practice', data.message || 'Try again');
         return;
       }
       setSession(data.data);
@@ -321,11 +372,7 @@ const ExamPrepTargetScreen: React.FC = () => {
         {target.description ? (
           <Text style={[styles.pageSub, { color: theme.colors.onSurfaceVariant }]}>{target.description}</Text>
         ) : null}
-        {target.exam_date ? (
-          <Text style={[styles.examDate, { color: theme.colors.onSurfaceVariant }]}>
-            Exam date: {target.exam_date}
-          </Text>
-        ) : null}
+        {target.exam_date ? <ExamDueClock examDate={target.exam_date} isDark={isDark} /> : null}
 
         {phase === 'playing' && session ? (
           <View style={{ marginTop: 24 }}>
@@ -342,192 +389,314 @@ const ExamPrepTargetScreen: React.FC = () => {
             />
           </View>
         ) : (
-          <View style={{ marginTop: 32 }}>
-            <View style={styles.testsHead}>
+          <View style={{ marginTop: 32, gap: 16 }}>
+            <View
+              style={[
+                styles.panel,
+                {
+                  backgroundColor: isDark ? 'rgba(24,24,27,0.8)' : 'rgba(255,255,255,0.9)',
+                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,47,35,0.12)',
+                },
+              ]}
+            >
               <View style={styles.testsHeadLeft}>
                 <View style={[styles.testsIcon, { backgroundColor: theme.colors.primaryContainer }]}>
-                  <GraduationCap size={20} strokeWidth={ICON_STROKE} color={theme.colors.secondary} />
+                  <Folder size={16} strokeWidth={ICON_STROKE} color={theme.colors.secondary} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.testsTitle, { color: theme.colors.onSurface }]}>Tests</Text>
-                  <Text style={[styles.testsSub, { color: theme.colors.onSurfaceVariant }]}>
-                    Practice sets for this exam
-                  </Text>
-                </View>
+                <Text style={[styles.testsTitle, { color: theme.colors.onSurface }]}>Materials</Text>
               </View>
-              {sessions.length > 0 ? (
-                <TouchableOpacity
-                  onPress={() => setUploadOpen(true)}
-                  disabled={starting}
-                  style={[styles.newTestBtn, { backgroundColor: theme.colors.primary, opacity: starting ? 0.6 : 1 }]}
-                  activeOpacity={0.85}
-                >
-                  <Plus size={14} strokeWidth={ICON_STROKE} color={theme.colors.onPrimary} />
-                  <Text style={[styles.newTestBtnText, { color: theme.colors.onPrimary }]}>New test</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-
-            {(target.folders?.length || target.contents?.length) ? (
-              <View style={styles.chips}>
-                {(target.folders || []).map((folder) => (
-                  <View
-                    key={`f-${folder.id}`}
-                    style={[
-                      styles.chip,
-                      {
-                        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(228,228,231,0.8)',
-                        backgroundColor: isDark ? 'rgba(24,24,27,0.6)' : '#FFFFFF',
-                      },
-                    ]}
-                  >
-                    <Folder size={14} strokeWidth={ICON_STROKE} color={theme.colors.secondary} />
-                    <Text numberOfLines={1} style={[styles.chipText, { color: theme.colors.onSurfaceVariant }]}>
-                      {folder.name}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => void removeFolder(folder.id)}
-                      hitSlop={8}
-                      accessibilityLabel={`Remove folder ${folder.name}`}
-                    >
-                      <Trash2 size={12} strokeWidth={ICON_STROKE} color={theme.colors.onSurfaceVariant} />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-                {(target.contents || []).map((note) => (
-                  <View
-                    key={`n-${note.id}`}
-                    style={[
-                      styles.chip,
-                      {
-                        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(228,228,231,0.8)',
-                        backgroundColor: isDark ? 'rgba(24,24,27,0.6)' : '#FFFFFF',
-                      },
-                    ]}
-                  >
-                    <TouchableOpacity
-                      onPress={() => openNote(note.id)}
-                      style={styles.chipLink}
-                      activeOpacity={0.8}
-                    >
-                      <FileText size={14} strokeWidth={ICON_STROKE} color={theme.colors.onSurfaceVariant} />
-                      <Text numberOfLines={1} style={[styles.chipText, { color: theme.colors.onSurfaceVariant }]}>
-                        {note.title}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => void removeNote(note.id)}
-                      hitSlop={8}
-                      accessibilityLabel={`Remove note ${note.title}`}
-                    >
-                      <Trash2 size={12} strokeWidth={ICON_STROKE} color={theme.colors.onSurfaceVariant} />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            ) : null}
-
-            {sessions.length === 0 ? (
-              <View
-                style={[
-                  styles.empty,
-                  { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(228,228,231,0.9)' },
-                ]}
-              >
-                <ClipboardList size={32} strokeWidth={ICON_STROKE} color={theme.colors.onSurfaceVariant} />
-                <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>No tests yet</Text>
-                <Text style={[styles.emptyBody, { color: theme.colors.onSurfaceVariant }]}>
-                  Start a 10-question mixed MCQ from your linked notes.
-                </Text>
-                <TouchableOpacity
-                  onPress={startQuickPractice}
-                  disabled={starting}
-                  style={[styles.practiceBtn, { backgroundColor: theme.colors.primary, opacity: starting ? 0.7 : 1 }]}
-                  activeOpacity={0.85}
-                >
-                  {starting ? (
-                    <ActivityIndicator color={theme.colors.onPrimary} size="small" />
-                  ) : (
-                    <Sparkles size={14} strokeWidth={ICON_STROKE} color={theme.colors.onPrimary} />
-                  )}
-                  <Text style={[styles.practiceBtnText, { color: theme.colors.onPrimary }]}>Start practice</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={{ gap: 12 }}>
-                {sessions.map((item) => {
-                  const meta = sessionStatusMeta(item.status);
-                  const typeLabel = item.eval_type === 'qa' ? 'Q&A' : 'MCQ';
-                  const when = formatWhen(item.completed_at || item.created_at);
-                  const scoreLine =
-                    item.status === 'completed' && item.score != null
-                      ? `${Math.round(item.score)}%`
-                      : `${item.question_count} questions`;
-                  const opening = openingId === item.id;
-                  return (
-                    <TouchableOpacity
-                      key={item.id}
-                      onPress={() => void openSession(item.id)}
-                      disabled={opening}
-                      activeOpacity={0.85}
+              {(target.folders?.length || target.contents?.length) ? (
+                <View style={[styles.chips, { marginTop: 14 }]}>
+                  {(target.folders || []).map((folder) => (
+                    <View
+                      key={`f-${folder.id}`}
                       style={[
-                        styles.sessionCard,
+                        styles.chip,
                         {
-                          backgroundColor: isDark ? 'rgba(24,24,27,0.8)' : '#FFFFFF',
-                          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,47,35,0.12)',
-                          opacity: opening ? 0.6 : 1,
-                          ...boxShadow('0 1px 2px rgba(26,47,35,0.06)', {
-                            shadowColor: '#1A2F23',
-                            shadowOpacity: 0.06,
-                            shadowRadius: 4,
-                            shadowOffset: { width: 0, height: 1 },
-                            elevation: 1,
-                          }),
+                          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(228,228,231,0.8)',
+                          backgroundColor: isDark ? 'rgba(24,24,27,0.6)' : '#FFFFFF',
                         },
                       ]}
                     >
-                      <View style={[styles.sessionIcon, { backgroundColor: theme.colors.primaryContainer }]}>
-                        {opening ? (
-                          <ActivityIndicator color={theme.colors.secondary} />
-                        ) : (
-                          <ClipboardList size={20} strokeWidth={ICON_STROKE} color={theme.colors.secondary} />
-                        )}
-                      </View>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <View style={styles.sessionTitleRow}>
-                          <Text style={[styles.sessionTitle, { color: theme.colors.onSurface }]}>
-                            {typeLabel} · {item.question_count} questions
-                          </Text>
-                          <View
-                            style={[
-                              styles.badge,
-                              { backgroundColor: isDark ? meta.darkBg : meta.bg },
-                            ]}
-                          >
-                            <Text style={[styles.badgeText, { color: isDark ? meta.darkFg : meta.fg }]}>
-                              {meta.label}
-                            </Text>
-                          </View>
-                        </View>
-                        <Text style={[styles.sessionMeta, { color: theme.colors.onSurfaceVariant }]}>
-                          {scoreLine}
-                          {item.difficulty ? ` · ${item.difficulty}` : ''}
+                      <Folder size={14} strokeWidth={ICON_STROKE} color={theme.colors.secondary} />
+                      <Text numberOfLines={1} style={[styles.chipText, { color: theme.colors.onSurfaceVariant }]}>
+                        {folder.name}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => void removeFolder(folder.id)}
+                        hitSlop={8}
+                        accessibilityLabel={`Remove folder ${folder.name}`}
+                      >
+                        <Trash2 size={12} strokeWidth={ICON_STROKE} color={theme.colors.onSurfaceVariant} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  {(target.contents || []).map((note) => (
+                    <View
+                      key={`n-${note.id}`}
+                      style={[
+                        styles.chip,
+                        {
+                          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(228,228,231,0.8)',
+                          backgroundColor: isDark ? 'rgba(24,24,27,0.6)' : '#FFFFFF',
+                        },
+                      ]}
+                    >
+                      <TouchableOpacity
+                        onPress={() => openNote(note.id)}
+                        style={styles.chipLink}
+                        activeOpacity={0.8}
+                      >
+                        <FileText size={14} strokeWidth={ICON_STROKE} color={theme.colors.onSurfaceVariant} />
+                        <Text numberOfLines={1} style={[styles.chipText, { color: theme.colors.onSurfaceVariant }]}>
+                          {note.title}
                         </Text>
-                        {when ? (
-                          <Text style={[styles.sessionWhen, { color: theme.colors.onSurfaceVariant }]}>{when}</Text>
-                        ) : null}
-                      </View>
-                      <View style={styles.sessionCta}>
-                        <Text style={[styles.sessionCtaText, { color: isDark ? '#9BB8A6' : theme.colors.secondary }]}>
-                          {item.status === 'completed' ? 'View' : 'Resume'}
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => void removeNote(note.id)}
+                        hitSlop={8}
+                        accessibilityLabel={`Remove note ${note.title}`}
+                      >
+                        <Trash2 size={12} strokeWidth={ICON_STROKE} color={theme.colors.onSurfaceVariant} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.empty,
+                    {
+                      marginTop: 14,
+                      paddingVertical: 20,
+                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(228,228,231,0.9)',
+                    },
+                  ]}
+                >
+                  <Text style={[styles.emptyBody, { color: theme.colors.onSurfaceVariant }]}>
+                    No materials linked yet. Add notes or folders from the exam hub to study against this
+                    target.
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.panel,
+                {
+                  backgroundColor: isDark ? 'rgba(24,24,27,0.8)' : 'rgba(255,255,255,0.9)',
+                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,47,35,0.12)',
+                },
+              ]}
+            >
+              <View style={styles.testsHeadLeft}>
+                <View style={[styles.testsIcon, { backgroundColor: theme.colors.primaryContainer }]}>
+                  <RotateCcw size={16} strokeWidth={ICON_STROKE} color={theme.colors.secondary} />
+                </View>
+                <Text style={[styles.testsTitle, { color: theme.colors.onSurface }]}>Revise</Text>
+              </View>
+
+              {reviseQueueTotal > 0 ? (
+                <View style={{ gap: 8, marginTop: 14 }}>
+                  {(reviseSummary?.items || [])
+                    .filter((item) => (item.study_queue_count || 0) > 0)
+                    .map((item) => (
+                      <TouchableOpacity
+                        key={item.content_id}
+                        onPress={() => openCards(item.content_id)}
+                        activeOpacity={0.85}
+                        style={[
+                          styles.reviseRow,
+                          {
+                            backgroundColor: isDark ? 'rgba(9,9,11,0.5)' : '#FFFFFF',
+                            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,47,35,0.12)',
+                          },
+                        ]}
+                      >
+                        <Text
+                          numberOfLines={1}
+                          style={[styles.reviseTitle, { color: theme.colors.onSurface, flex: 1 }]}
+                        >
+                          {item.title}
+                        </Text>
+                        <Text style={[styles.reviseMeta, { color: isDark ? '#9BB8A6' : theme.colors.secondary }]}>
+                          {item.study_queue_count} to revise
                         </Text>
                         <ArrowRight size={14} strokeWidth={ICON_STROKE} color={isDark ? '#9BB8A6' : theme.colors.secondary} />
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
+                      </TouchableOpacity>
+                    ))}
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.empty,
+                    {
+                      marginTop: 14,
+                      paddingVertical: 20,
+                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(228,228,231,0.9)',
+                    },
+                  ]}
+                >
+                  <Text style={[styles.emptyBody, { color: theme.colors.onSurfaceVariant }]}>
+                    {hasMaterials
+                      ? 'No cards due right now. Generate flashcards on your materials, then revise here.'
+                      : 'Link notes or folders as materials to revise from their study stacks.'}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.panel,
+                {
+                  backgroundColor: isDark ? 'rgba(24,24,27,0.8)' : 'rgba(255,255,255,0.9)',
+                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,47,35,0.12)',
+                },
+              ]}
+            >
+              <View style={styles.testsHead}>
+                <View style={styles.testsHeadLeft}>
+                  <View style={[styles.testsIcon, { backgroundColor: theme.colors.primaryContainer }]}>
+                    <GraduationCap size={16} strokeWidth={ICON_STROKE} color={theme.colors.secondary} />
+                  </View>
+                  <Text style={[styles.testsTitle, { color: theme.colors.onSurface }]}>Practice</Text>
+                </View>
+                {sessions.length > 0 ? (
+                  <TouchableOpacity
+                    onPress={handleOpenGenerate}
+                    disabled={starting}
+                    style={[styles.newTestBtn, { backgroundColor: theme.colors.primary, opacity: starting ? 0.6 : 1 }]}
+                    activeOpacity={0.85}
+                  >
+                    <Plus size={14} strokeWidth={ICON_STROKE} color={theme.colors.onPrimary} />
+                    <Text style={[styles.newTestBtnText, { color: theme.colors.onPrimary }]}>Generate</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
-            )}
+
+              {sessions.length === 0 ? (
+                <View
+                  style={[
+                    styles.empty,
+                    { marginTop: 14, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(228,228,231,0.9)' },
+                  ]}
+                >
+                  <ClipboardList size={28} strokeWidth={ICON_STROKE} color={theme.colors.onSurfaceVariant} />
+                  <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>No practices yet</Text>
+                  <Text style={[styles.emptyBody, { color: theme.colors.onSurfaceVariant }]}>
+                    Generate a practice from your materials, or jump into a quick 10-question mixed MCQ.
+                  </Text>
+                  <View style={styles.emptyActions}>
+                    <TouchableOpacity
+                      onPress={handleOpenGenerate}
+                      disabled={starting}
+                      style={[styles.practiceBtn, { backgroundColor: theme.colors.primary, opacity: starting ? 0.7 : 1 }]}
+                      activeOpacity={0.85}
+                    >
+                      <Plus size={14} strokeWidth={ICON_STROKE} color={theme.colors.onPrimary} />
+                      <Text style={[styles.practiceBtnText, { color: theme.colors.onPrimary }]}>
+                        Generate practice
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={startQuickPractice}
+                      disabled={starting}
+                      style={[
+                        styles.practiceBtn,
+                        {
+                          backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#E4E4E7',
+                          opacity: starting ? 0.7 : 1,
+                        },
+                      ]}
+                      activeOpacity={0.85}
+                    >
+                      {starting ? (
+                        <ActivityIndicator color={theme.colors.onSurface} size="small" />
+                      ) : (
+                        <Sparkles size={14} strokeWidth={ICON_STROKE} color={theme.colors.onSurface} />
+                      )}
+                      <Text style={[styles.practiceBtnText, { color: theme.colors.onSurface }]}>Quick 10-Q</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={{ gap: 12, marginTop: 14 }}>
+                  {sessions.map((item) => {
+                    const meta = sessionStatusMeta(item.status);
+                    const typeLabel = item.eval_type === 'qa' ? 'Q&A' : 'MCQ';
+                    const when = formatWhen(item.completed_at || item.created_at);
+                    const scoreLine =
+                      item.status === 'completed' && item.score != null
+                        ? `${Math.round(item.score)}%`
+                        : `${item.question_count} questions`;
+                    const opening = openingId === item.id;
+                    return (
+                      <TouchableOpacity
+                        key={item.id}
+                        onPress={() => void openSession(item.id)}
+                        disabled={opening}
+                        activeOpacity={0.85}
+                        style={[
+                          styles.sessionCard,
+                          {
+                            backgroundColor: isDark ? 'rgba(9,9,11,0.5)' : '#FFFFFF',
+                            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,47,35,0.12)',
+                            opacity: opening ? 0.6 : 1,
+                            ...boxShadow('0 1px 2px rgba(26,47,35,0.06)', {
+                              shadowColor: '#1A2F23',
+                              shadowOpacity: 0.06,
+                              shadowRadius: 4,
+                              shadowOffset: { width: 0, height: 1 },
+                              elevation: 1,
+                            }),
+                          },
+                        ]}
+                      >
+                        <View style={[styles.sessionIcon, { backgroundColor: theme.colors.primaryContainer }]}>
+                          {opening ? (
+                            <ActivityIndicator color={theme.colors.secondary} />
+                          ) : (
+                            <ClipboardList size={20} strokeWidth={ICON_STROKE} color={theme.colors.secondary} />
+                          )}
+                        </View>
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <View style={styles.sessionTitleRow}>
+                            <Text style={[styles.sessionTitle, { color: theme.colors.onSurface }]}>
+                              {typeLabel} · {item.question_count} questions
+                            </Text>
+                            <View
+                              style={[
+                                styles.badge,
+                                { backgroundColor: isDark ? meta.darkBg : meta.bg },
+                              ]}
+                            >
+                              <Text style={[styles.badgeText, { color: isDark ? meta.darkFg : meta.fg }]}>
+                                {meta.label}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text style={[styles.sessionMeta, { color: theme.colors.onSurfaceVariant }]}>
+                            {scoreLine}
+                            {item.difficulty ? ` · ${item.difficulty}` : ''}
+                          </Text>
+                          {when ? (
+                            <Text style={[styles.sessionWhen, { color: theme.colors.onSurfaceVariant }]}>{when}</Text>
+                          ) : null}
+                        </View>
+                        <View style={styles.sessionCta}>
+                          <Text style={[styles.sessionCtaText, { color: isDark ? '#9BB8A6' : theme.colors.secondary }]}>
+                            {item.status === 'completed' ? 'View' : 'Resume'}
+                          </Text>
+                          <ArrowRight size={14} strokeWidth={ICON_STROKE} color={isDark ? '#9BB8A6' : theme.colors.secondary} />
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -561,24 +730,26 @@ const styles = StyleSheet.create({
   backText: { fontFamily: Fonts.ui.regular, fontSize: 14 },
   pageTitle: { fontFamily: Fonts.ui.bold, fontSize: 24, letterSpacing: -0.4 },
   pageSub: { marginTop: 4, fontFamily: Fonts.ui.regular, fontSize: 14, lineHeight: 20 },
-  examDate: { marginTop: 4, fontFamily: Fonts.ui.regular, fontSize: 12 },
+  panel: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+  },
   testsHead: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    marginBottom: 16,
   },
-  testsHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
+  testsHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 },
   testsIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  testsTitle: { fontFamily: Fonts.ui.semiBold, fontSize: 20, letterSpacing: -0.3 },
-  testsSub: { marginTop: 2, fontFamily: Fonts.ui.regular, fontSize: 13 },
+  testsTitle: { fontFamily: Fonts.ui.semiBold, fontSize: 18, letterSpacing: -0.3 },
   newTestBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -588,7 +759,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   newTestBtnText: { fontFamily: Fonts.ui.bold, fontSize: 13 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     maxWidth: '100%',
     flexDirection: 'row',
@@ -601,6 +772,17 @@ const styles = StyleSheet.create({
   },
   chipLink: { flexDirection: 'row', alignItems: 'center', gap: 6, minWidth: 0, flexShrink: 1 },
   chipText: { fontFamily: Fonts.ui.regular, fontSize: 12, maxWidth: 180 },
+  reviseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  reviseTitle: { fontFamily: Fonts.ui.medium, fontSize: 14 },
+  reviseMeta: { fontFamily: Fonts.ui.semiBold, fontSize: 12 },
   empty: {
     borderWidth: 1,
     borderStyle: 'dashed',
@@ -611,8 +793,8 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { marginTop: 12, fontFamily: Fonts.ui.semiBold, fontSize: 14 },
   emptyBody: { marginTop: 4, fontFamily: Fonts.ui.regular, fontSize: 14, textAlign: 'center' },
+  emptyActions: { marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
   practiceBtn: {
-    marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,

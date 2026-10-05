@@ -5,6 +5,7 @@ import type {
   ExamTargetSummary,
   ExamEvalSession,
   ExamEvalSessionSummary,
+  ExamReviseSummary,
 } from '@/api/schemas/testPrep';
 
 const errorMessage = (error: unknown, fallback: string): string => {
@@ -151,7 +152,19 @@ export const testPrepService = {
       const { sessions } = await testPrepEndpoints.listSessions(targetId, userId);
       return { success: true, data: sessions };
     } catch (error) {
-      return { success: false, message: errorMessage(error, 'Failed to load tests') };
+      return { success: false, message: errorMessage(error, 'Failed to load practices') };
+    }
+  },
+
+  getReviseSummary: async (
+    targetId: number,
+    userId: number
+  ): Promise<{ success: boolean; data?: ExamReviseSummary; message?: string }> => {
+    try {
+      const summary = await testPrepEndpoints.getReviseSummary(targetId, userId);
+      return { success: true, data: summary };
+    } catch (error) {
+      return { success: false, message: errorMessage(error, 'Failed to load revise summary') };
     }
   },
 
@@ -163,7 +176,7 @@ export const testPrepService = {
       const { session } = await testPrepEndpoints.getSession(sessionId, userId);
       return { success: true, data: session };
     } catch (error) {
-      return { success: false, message: errorMessage(error, 'Failed to open test') };
+      return { success: false, message: errorMessage(error, 'Failed to open practice') };
     }
   },
 

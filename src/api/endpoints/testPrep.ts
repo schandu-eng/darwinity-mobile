@@ -4,10 +4,12 @@ import {
   ExamTargetResponseSchema,
   ExamSessionListResponseSchema,
   ExamSessionResponseSchema,
+  ExamReviseSummarySchema,
   type ExamTargetDetail,
   type ExamTargetSummary,
   type ExamEvalSession,
   type ExamEvalSessionSummary,
+  type ExamReviseSummary,
 } from '../schemas/testPrep';
 
 export const testPrepEndpoints = {
@@ -128,6 +130,17 @@ export const testPrepEndpoints = {
       params: { user_id: userId },
     });
     return ExamSessionListResponseSchema.parse(response.data);
+  },
+
+  getReviseSummary: async (
+    targetId: number,
+    userId: number
+  ): Promise<ExamReviseSummary> => {
+    const response = await apiClient.get(
+      `/api/v1/test-prep/targets/${targetId}/revise-summary`,
+      { params: { user_id: userId } }
+    );
+    return ExamReviseSummarySchema.parse(response.data);
   },
 
   getSession: async (sessionId: number, userId: number): Promise<{ session: ExamEvalSession }> => {

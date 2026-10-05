@@ -209,7 +209,7 @@ const EvalPlayer: React.FC<Props> = ({ session, userId, onDone, onExit }) => {
           onPress={onExit}
           activeOpacity={0.85}
         >
-          <Text style={[styles.primaryBtnText, { color: theme.colors.onPrimary }]}>Back to tests</Text>
+          <Text style={[styles.primaryBtnText, { color: theme.colors.onPrimary }]}>Back to practice</Text>
         </TouchableOpacity>
       </View>
     );

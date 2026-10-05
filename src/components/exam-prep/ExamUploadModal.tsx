@@ -160,7 +160,7 @@ const ExamUploadModal: React.FC<Props> = ({
 
           <View style={[styles.center, pointerEventsStyle('box-none')]} pointerEvents={pointerEventsProp('box-none')}>
             <Animated.View
-              accessibilityLabel="Create practice"
+              accessibilityLabel="Generate practice"
               style={[
                 styles.modal,
                 {
@@ -191,9 +191,9 @@ const ExamUploadModal: React.FC<Props> = ({
                   </Pressable>
 
                   <View style={styles.header}>
-                    <Text style={[styles.title, { color: ink }]}>Create practice</Text>
+                    <Text style={[styles.title, { color: ink }]}>Generate practice</Text>
                     <Text style={[styles.description, { color: muted }]}>
-                      Paste PYQs if you have them, then configure and start a test from your linked notes.
+                      Paste PYQs if you have them, then configure a practice from your materials.
                     </Text>
                   </View>
 
@@ -353,7 +353,7 @@ const ExamUploadModal: React.FC<Props> = ({
                       ]}
                     >
                       <GraduationCap size={16} strokeWidth={ICON_STROKE} color="#FFFFFF" />
-                      <Text style={styles.primaryBtnText}>Start test</Text>
+                      <Text style={styles.primaryBtnText}>Generate practice</Text>
                     </Pressable>
                     <Pressable
                       onPress={handleClose}

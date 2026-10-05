@@ -80,9 +80,9 @@ const EvalGeneratingState: React.FC<Props> = ({ questionCount = 10, evalType = '
   return (
     <View style={styles.wrap}>
       <Text style={[styles.eyebrow, { color: growth }]}>Preparing</Text>
-      <Text style={[styles.title, { color: ink }]}>Generating your test</Text>
+      <Text style={[styles.title, { color: ink }]}>Generating your practice</Text>
       <Text style={[styles.subtitle, { color: muted }]}>
-        Building a {countLabel} · {typeLabel} set from your notes and past papers.
+        Building a {countLabel} · {typeLabel} set from your materials and past papers.
       </Text>
       <View style={styles.trail}>
         <StudyGenerationTrailMap stages={trailStages} progress={progress} />
