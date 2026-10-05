@@ -5,7 +5,7 @@ import { PaperProvider } from 'react-native-paper';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { Platform, LogBox, Text, TextInput } from 'react-native';
+import { Platform, LogBox, Text, TextInput, Linking } from 'react-native';
 import { useFonts } from 'expo-font';
 import { useThemeStore, useAppTheme } from './src/store';
 import { lightTheme, darkTheme } from './src/theme';
@@ -20,7 +20,11 @@ import { ConcentrationSessionProvider } from './src/features/concentration/Conce
 import StatsigAppProvider from './src/featureFlags/StatsigAppProvider';
 import HighTrafficOverlay from './src/components/feedback/HighTrafficOverlay';
 import SiteStatusHost from './src/components/feedback/SiteStatusHost';
-
+import {
+  claimStoredAttribution,
+  persistAttributionFromUrl,
+} from './src/utils/attributionCapture';
+import { getAuthToken } from './src/api/client';
 if (!__DEV__) {
   LogBox.ignoreAllLogs(true);
 }
@@ -55,6 +59,27 @@ function App() {
     initializeTheme();
     void initAnalytics();
   }, [initializeTheme]);
+
+  useEffect(() => {
+    let sub: { remove: () => void } | null = null;
+    const capture = async (url: string | null) => {
+      if (!url) return;
+      await persistAttributionFromUrl(url);
+      const token = await getAuthToken();
+      if (token) {
+        void claimStoredAttribution(token);
+      }
+    };
+    Linking.getInitialURL()
+      .then((url) => capture(url))
+      .catch(() => {});
+    sub = Linking.addEventListener('url', ({ url }) => {
+      void capture(url);
+    });
+    return () => {
+      sub?.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const initializeUpdates = async () => {

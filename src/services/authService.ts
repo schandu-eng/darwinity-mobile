@@ -4,7 +4,7 @@ import { setAuthToken } from '@/api/client';
 import { useAuthStore } from '@/store';
 import type { User } from '@/types';
 import type { AuthSessionResponse } from '@/api/endpoints/auth';
-
+import { claimStoredAttribution } from '@/utils/attributionCapture';
 const getDeviceTimezone = () => {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -99,6 +99,7 @@ const applySession = async (
     }
 
     await setAuth(user, response.token);
+    void claimStoredAttribution(response.token);
 
     return {
       success: true,
@@ -392,6 +393,7 @@ export const memberAuthService = {
       }
 
       await setAuth(user, token);
+      void claimStoredAttribution(token);
       const carryoverMessage = quotaCarryoverMessage(
         response.emailQuotaCarriedOver,
         response.deviceQuotaCarriedOver
