@@ -1,7 +1,7 @@
-/** Global kill switch: no new trials in any market (CTAs, splash, onboarding).
+/** Global switch: trials outside South Asia + Africa (CTAs, splash, onboarding).
  *  Keep in sync with backend/payments/trial_policy.py TRIALS_OFFERED.
  */
-export const TRIALS_OFFERED = false;
+export const TRIALS_OFFERED = true;
 export const INDIA_TRIAL_ENABLED = false;
 
 const INDIA_ALIASES = new Set(['india', 'in', 'ind']);
