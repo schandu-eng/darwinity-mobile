@@ -99,4 +99,25 @@ export const contentEndpoints = {
     );
     return safeParseDev(FlashcardsResponseSchema, response.data);
   },
+
+  getNoteShare: async (
+    contentId: number
+  ): Promise<{ shared: boolean; share_token: string | null; share_url: string | null }> => {
+    const response = await apiClient.get(`/api/v1/materials/content/${contentId}/share`);
+    return response.data;
+  },
+
+  enableNoteShare: async (
+    contentId: number
+  ): Promise<{ shared: boolean; share_token: string | null; share_url: string | null }> => {
+    const response = await apiClient.post(`/api/v1/materials/content/${contentId}/share`);
+    return response.data;
+  },
+
+  revokeNoteShare: async (
+    contentId: number
+  ): Promise<{ shared: boolean; share_token: string | null; share_url: string | null }> => {
+    const response = await apiClient.delete(`/api/v1/materials/content/${contentId}/share`);
+    return response.data;
+  },
 };

@@ -32,9 +32,15 @@ import {
   tokenInjectScript,
 } from '@/utils/notesEmbed';
 import type { ContentStackParamList } from '@/types/navigation';
+import NotesShareRateModal from '@/components/feedback/NotesShareRateModal';
+import {
+  getFeedbackPromptShown,
+  setFeedbackPromptShown,
+} from '@/utils/feedbackPromptStorage';
 
 const FLUSH_TIMEOUT_MS = 4000;
 const LOAD_TIMEOUT_MS = 18000;
+const SHARE_RATE_PROMPT = 'notes_share_rate';
 
 type NotesEditorRoute = RouteProp<ContentStackParamList, 'NotesEditor'>;
 type NotesEditorNav = NativeStackNavigationProp<ContentStackParamList, 'NotesEditor'>;
@@ -58,6 +64,8 @@ export default function NotesEditorScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [webFallback, setWebFallback] = useState(Platform.OS === 'web');
+  const [shareRateOpen, setShareRateOpen] = useState(false);
+  const shareRateArmedRef = useRef(false);
 
   const embedUrl = useMemo(() => nativeNotesEmbedUrl(contentId, token), [contentId, token]);
   const injectScript = useMemo(() => tokenInjectScript(token || ''), [token]);
@@ -142,6 +150,15 @@ export default function NotesEditorScreen() {
       if (msg.type === NATIVE_NOTES_EMBED_MESSAGE.READY) {
         setReady(true);
         setError(null);
+        if (!shareRateArmedRef.current) {
+          shareRateArmedRef.current = true;
+          void (async () => {
+            const shown = await getFeedbackPromptShown(SHARE_RATE_PROMPT, 'mobile');
+            if (shown) return;
+            await setFeedbackPromptShown(SHARE_RATE_PROMPT, 'mobile');
+            setTimeout(() => setShareRateOpen(true), 900);
+          })();
+        }
         return;
       }
       if (msg.type === NATIVE_NOTES_EMBED_MESSAGE.DIRTY) {
@@ -330,6 +347,11 @@ export default function NotesEditorScreen() {
           />
         </View>
       )}
+      <NotesShareRateModal
+        visible={shareRateOpen}
+        onClose={() => setShareRateOpen(false)}
+        contentId={contentId}
+      />
     </View>
   );
 }
