@@ -24,7 +24,7 @@ export const CheckpointModalHost: React.FC = () => {
     <Modal transparent animationType="fade" visible>
       <View style={styles.backdrop}>
         <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.title, { color: theme.colors.onSurface }]}>Reward unlocked</Text>
+          <Text style={[styles.title, { color: theme.colors.onSurface }]}>Checkpoint unlocked</Text>
           <Text style={[styles.body, { color: theme.colors.onSurfaceVariant }]}>{message}</Text>
           <Text style={[styles.balance, { color: theme.colors.primary }]}>
             Wallet balance: {current.balance.toFixed(2)} {current.currency}

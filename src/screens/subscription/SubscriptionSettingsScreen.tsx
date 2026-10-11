@@ -23,6 +23,7 @@ import { subscriptionService } from '@/services/subscriptionService';
 import type { PaymentHistoryItem } from '@/services/subscriptionService';
 import BottomSheet from '@/components/ui/BottomSheet';
 import { LoyaltyWalletSection } from '@/features/concentration/RewardsWalletSection';
+import { SHOW_REWARDS_WALLET } from '@/features/concentration/rewardsUiFlags';
 import { getUpgradeCtaCopy, isTrialAvailableFromStatus, trialDaysFromStatus } from '@/utils/trialAvailability';
 
 import { Fonts } from '@/config/fonts';
@@ -337,7 +338,7 @@ const BillingPlanSettingsScreen: React.FC = () => {
           <MaterialCommunityIcons name="close" size={24} color={theme.colors.onSurface} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-          BillingPlan & rewards
+          {SHOW_REWARDS_WALLET ? 'BillingPlan & rewards' : 'BillingPlan'}
         </Text>
         <View style={styles.headerSpacer} />
       </View>

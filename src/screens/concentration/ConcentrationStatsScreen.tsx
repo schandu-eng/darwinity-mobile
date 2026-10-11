@@ -17,7 +17,6 @@ import { useAppTheme } from '@/store/appThemeStore';
 import { lightTheme, darkTheme } from '@/theme';
 import { focusEndpoints, type LoyaltyHistory, type LoyaltyMe } from '@/api/endpoints/concentration';
 import {
-  TOTAL_CHECKPOINT_PERCENT,
   buildDailySeries,
   dayBarRatio,
   dayBarSeconds,
@@ -33,7 +32,8 @@ import {
   type DailyPoint,
 } from '@/features/concentration/loyaltyCheckpoints';
 import { STUDY_PAGE_LABELS } from '@/features/concentration/useStudyPageDwell';
-import { BookOpen, Check, Clock, Gem, Layers, Sparkles, Timer } from '@/icons';
+import { SHOW_REWARDS_WALLET } from '@/features/concentration/rewardsUiFlags';
+import { Award, BookOpen, Check, Clock, Gem, Layers, Sparkles, Timer } from '@/icons';
 import { ICON_STROKE } from '@/config/icons';
 import { Fonts } from '@/config/fonts';
 import { toUserFacingError } from '@/utils/userFacingError';
@@ -196,19 +196,6 @@ function DailyActivityChart({
   );
 }
 
-function formatMoney(amount: number, currency: string): string | null {
-  if (!Number.isFinite(amount) || amount <= 0) return null;
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: currency || 'INR',
-      maximumFractionDigits: amount >= 100 ? 0 : 2,
-    }).format(amount);
-  } catch {
-    return `${amount.toFixed(amount >= 100 ? 0 : 2)} ${currency || ''}`.trim();
-  }
-}
-
 function statusMeta(status: string, colors: ThemeColors, isDark: boolean) {
   if (status === 'claimed') {
     return { label: 'Claimed', bg: `${colors.primary}26`, fg: colors.primary };
@@ -236,6 +223,20 @@ const ConcentrationStatsScreen: React.FC = () => {
 
   const [me, setMe] = useState<LoyaltyMe | null>(null);
   const [history, setHistory] = useState<LoyaltyHistory | null>(null);
+  const [leaderboard, setLeaderboard] = useState<{
+    entries: Array<{
+      rank: number;
+      display_name: string;
+      score: number;
+      is_you: boolean;
+    }>;
+    me: {
+      rank: number | null;
+      display_name: string;
+      score: number;
+      is_you: boolean;
+    } | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedCheckpoint, setSelectedCheckpoint] = useState<string | null>(null);
@@ -245,12 +246,14 @@ const ConcentrationStatsScreen: React.FC = () => {
     if (!userId) return;
     setLoading(true);
     try {
-      const [loyalty, hist] = await Promise.all([
+      const [loyalty, hist, board] = await Promise.all([
         focusEndpoints.getLoyaltyMe(userId),
         focusEndpoints.getLoyaltyHistory(userId),
+        focusEndpoints.getLeaderboard(userId, 10).catch(() => null),
       ]);
       setMe(loyalty);
       setHistory(hist);
+      setLeaderboard(board);
     } catch (e) {
       console.warn('Could not load study stats:', toUserFacingError(e));
     } finally {
@@ -303,9 +306,6 @@ const ConcentrationStatsScreen: React.FC = () => {
   const selectedDay = dailySeries.find((d) => d.date === selectedDate) || null;
   const selectedCp =
     checkpoints.find((c) => c.code === selectedCheckpoint) || checkpoints[0] || null;
-  const maxEarnLabel = me?.can_earn
-    ? formatMoney(Number(me.amount_for_cap) * TOTAL_CHECKPOINT_PERCENT, me.currency)
-    : null;
   const cardsDone = Number.isFinite(Number(me?.fc_reviews)) ? Number(me?.fc_reviews) : 0;
   const quizDone = Number.isFinite(Number(me?.quiz_correct)) ? Number(me?.quiz_correct) : 0;
   const hasActivity =
@@ -365,8 +365,7 @@ const ConcentrationStatsScreen: React.FC = () => {
             2. Reviewing cards and answering quizzes also earns points. Finishing a pomodoro adds a bonus.
           </Text>
           <Text style={[styles.howText, { color: colors.onSurfaceVariant }]}>
-            3. Reach checkpoints A→D to unlock rewards (up to{' '}
-            {Math.round(TOTAL_CHECKPOINT_PERCENT * 100)}% back).
+            3. Reach checkpoints A→D as you build your period score.
           </Text>
         </View>
       ) : null}
@@ -430,8 +429,7 @@ const ConcentrationStatsScreen: React.FC = () => {
                   Go study
                 </Text>
               </Pressable>
-              {/* Wallet / plan-credit redeem is not offered on iOS (App Store IAP). */}
-              {Platform.OS !== 'ios' ? (
+              {SHOW_REWARDS_WALLET && Platform.OS !== 'ios' ? (
                 <Pressable
                   onPress={goRewards}
                   style={[
@@ -470,23 +468,9 @@ const ConcentrationStatsScreen: React.FC = () => {
 
         <View style={[styles.footerNote, { borderTopColor: colors.outlineVariant, backgroundColor: colors.surface }]}>
           <Text style={{ color: colors.onSurfaceVariant, fontFamily: Fonts.ui.regular, fontSize: 14, lineHeight: 20 }}>
-            {!me?.can_earn ? (
-              <Text style={{ color: colors.primary, fontFamily: Fonts.ui.semiBold }}>
-                {Platform.OS === 'ios'
-                  ? 'Keep studying with Focus to earn rewards.'
-                  : 'Keep studying with Focus to earn rewards toward your next plan.'}
-              </Text>
-            ) : maxEarnLabel ? (
-              <>
-                Earn up to{' '}
-                <Text style={{ color: colors.onSurface, fontFamily: Fonts.ui.semiBold }}>
-                  {maxEarnLabel}
-                </Text>
-                {claimedCount > 0 ? ` · ${claimedCount}/${checkpoints.length} claimed` : ''}
-              </>
-            ) : (
-              `Hit checkpoints to earn up to ${Math.round(TOTAL_CHECKPOINT_PERCENT * 100)}% back.`
-            )}
+            {`Hit checkpoints A→D to complete this period's quest${
+              claimedCount > 0 ? ` · ${claimedCount}/${checkpoints.length} claimed` : ''
+            }.`}
           </Text>
         </View>
       </View>
@@ -560,9 +544,11 @@ const ConcentrationStatsScreen: React.FC = () => {
               <Text style={{ color: colors.onSurfaceVariant, fontFamily: Fonts.ui.regular, fontSize: 12 }}>
                 Need {selectedCp.minL} pts
               </Text>
-              <Text style={{ color: colors.onSurfaceVariant, fontFamily: Fonts.ui.regular, fontSize: 12 }}>
-                Reward: {Math.round(selectedCp.percent * 100)}% back
-              </Text>
+              {selectedCp.blurb ? (
+                <Text style={{ color: colors.onSurfaceVariant, fontFamily: Fonts.ui.regular, fontSize: 12 }}>
+                  {selectedCp.blurb}
+                </Text>
+              ) : null}
             </View>
           </View>
           <View style={[styles.statusPill, { backgroundColor: cpStatus.bg }]}>
@@ -572,6 +558,123 @@ const ConcentrationStatsScreen: React.FC = () => {
           </View>
         </View>
       ) : null}
+
+      <View style={[styles.sectionHead, { marginTop: 8 }]}>
+        <View>
+          <Text style={[styles.sectionTitle, { color: colors.onSurface, marginTop: 0 }]}>
+            Leaderboard
+          </Text>
+          <Text style={{ color: colors.onSurfaceVariant, fontFamily: Fonts.ui.regular, fontSize: 12 }}>
+            Top scores this period
+          </Text>
+        </View>
+        {leaderboard?.me?.rank ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Award size={14} strokeWidth={ICON_STROKE} color={colors.primary} />
+            <Text style={{ color: colors.onSurfaceVariant, fontFamily: Fonts.ui.medium, fontSize: 12 }}>
+              You #{leaderboard.me.rank}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      {!leaderboard?.entries?.length ? (
+        <View style={[styles.emptyCard, surfaceCard(colors), { borderWidth: 1 }]}>
+          <Award size={28} strokeWidth={ICON_STROKE} color={colors.onSurfaceVariant} />
+          <Text style={{ color: colors.onSurface, fontFamily: Fonts.ui.semiBold, fontSize: 15, marginTop: 8 }}>
+            No rankings yet
+          </Text>
+          <Text
+            style={{
+              color: colors.onSurfaceVariant,
+              fontFamily: Fonts.ui.regular,
+              fontSize: 13,
+              textAlign: 'center',
+              marginTop: 4,
+            }}
+          >
+            Study this period to appear on the leaderboard.
+          </Text>
+        </View>
+      ) : (
+        <View style={[styles.boardCard, surfaceCard(colors), { borderWidth: 1 }]}>
+          {leaderboard.entries.map((row, idx) => (
+            <View
+              key={`${row.rank}-${row.display_name}`}
+              style={[
+                styles.boardRow,
+                idx > 0 ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.outlineVariant } : null,
+                row.is_you ? { backgroundColor: `${colors.primary}14` } : null,
+              ]}
+            >
+              <View
+                style={[
+                  styles.boardRank,
+                  {
+                    backgroundColor:
+                      row.rank === 1
+                        ? isDark
+                          ? 'rgba(251,191,36,0.2)'
+                          : '#FEF3C7'
+                        : mutedFill(isDark),
+                  },
+                ]}
+              >
+                <Text style={{ color: colors.onSurface, fontFamily: Fonts.ui.bold, fontSize: 12 }}>
+                  {row.rank}
+                </Text>
+              </View>
+              <Text
+                style={{
+                  flex: 1,
+                  color: colors.onSurface,
+                  fontFamily: Fonts.ui.semiBold,
+                  fontSize: 14,
+                }}
+                numberOfLines={1}
+              >
+                {row.display_name}
+                {row.is_you ? ' · you' : ''}
+              </Text>
+              <Text style={{ color: colors.onSurface, fontFamily: Fonts.ui.semiBold, fontSize: 14 }}>
+                {formatScore(row.score)}
+              </Text>
+            </View>
+          ))}
+          {leaderboard.me?.rank && !leaderboard.entries.some((e) => e.is_you) ? (
+            <View
+              style={[
+                styles.boardRow,
+                {
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                  borderTopColor: colors.outlineVariant,
+                  backgroundColor: `${colors.primary}14`,
+                },
+              ]}
+            >
+              <View style={[styles.boardRank, { backgroundColor: `${colors.primary}26` }]}>
+                <Text style={{ color: colors.primary, fontFamily: Fonts.ui.bold, fontSize: 12 }}>
+                  {leaderboard.me.rank}
+                </Text>
+              </View>
+              <Text
+                style={{
+                  flex: 1,
+                  color: colors.onSurface,
+                  fontFamily: Fonts.ui.semiBold,
+                  fontSize: 14,
+                }}
+                numberOfLines={1}
+              >
+                {leaderboard.me.display_name} · you
+              </Text>
+              <Text style={{ color: colors.onSurface, fontFamily: Fonts.ui.semiBold, fontSize: 14 }}>
+                {formatScore(leaderboard.me.score)}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      )}
 
       {/* Last 14 days — matches web */}
       <Text style={[styles.sectionTitle, { color: colors.onSurface, marginTop: 8 }]}>
@@ -849,6 +952,27 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sectionTitle: { fontFamily: Fonts.ui.semiBold, fontSize: 17 },
+  emptyCard: {
+    borderRadius: 16,
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  boardCard: { borderRadius: 16, overflow: 'hidden' },
+  boardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  boardRank: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   cpRow: { flexDirection: 'row', gap: 8 },
   cpBtn: {

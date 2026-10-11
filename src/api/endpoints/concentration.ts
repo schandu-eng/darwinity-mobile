@@ -167,6 +167,31 @@ export const focusEndpoints = {
     return data;
   },
 
+  getLeaderboard: async (
+    userId: number,
+    limit = 20
+  ): Promise<{
+    entries: Array<{
+      rank: number;
+      display_name: string;
+      score: number;
+      is_you: boolean;
+    }>;
+    me: {
+      rank: number | null;
+      display_name: string;
+      score: number;
+      is_you: boolean;
+    } | null;
+    total: number;
+    limit: number;
+  }> => {
+    const { data } = await apiClient.get('/api/v1/concentration/loyalty/leaderboard', {
+      params: { user_id: userId, limit },
+    });
+    return data;
+  },
+
   ingestDwell: async (
     userId: number,
     events: Array<{

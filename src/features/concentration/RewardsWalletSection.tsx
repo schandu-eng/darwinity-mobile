@@ -18,9 +18,11 @@ import {
   type WalletBalance,
   type WalletInboxItem,
 } from '@/api/endpoints/concentration';
+import { SHOW_REWARDS_WALLET } from '@/features/concentration/rewardsUiFlags';
 
 /** Rewards wallet is web / Android only — App Store IAP must not show plan-credit or upload redeem. */
 export const LoyaltyWalletSection: React.FC = () => {
+  if (!SHOW_REWARDS_WALLET) return null;
   if (Platform.OS === 'ios') return null;
   return <LoyaltyWalletSectionBody />;
 };

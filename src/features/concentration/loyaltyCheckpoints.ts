@@ -5,7 +5,7 @@ export const LOYALTY_CHECKPOINTS = [
     minL: 4,
     percent: 0.1,
     title: 'Spark',
-    blurb: 'First reward unlock. A few focused sessions get you here.',
+    blurb: 'First checkpoint unlock — a few focused sessions get you here.',
   },
   {
     code: 'B',
@@ -19,14 +19,14 @@ export const LOYALTY_CHECKPOINTS = [
     minL: 14,
     percent: 0.05,
     title: 'Blaze',
-    blurb: 'Solid study month territory. Another reward unlock.',
+    blurb: 'Solid study month territory — another checkpoint unlock.',
   },
   {
     code: 'D',
     minL: 22,
     percent: 0.05,
     title: 'Orbit',
-    blurb: 'Period max. You claimed the full checkpoint ladder.',
+    blurb: 'Period max — you cleared the full checkpoint ladder.',
   },
 ] as const;
 
