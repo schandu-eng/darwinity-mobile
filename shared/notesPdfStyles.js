@@ -85,11 +85,11 @@ img {
 
 /*
   Hierarchy mirrors StudyMaterialPage.css BlockNote preview:
-  H1 flush left; H2 + body share one tab; H3+/lists take two tabs.
+  H1/H2 + same-level body flush; indent only when hierarchy deepens (H3+/lists).
 */
 .sn-block {
   box-sizing: border-box;
-  padding-left: var(--dw-note-tab);
+  padding-left: 0;
   margin-block: 0.06em;
 }
 
@@ -99,7 +99,7 @@ img {
 }
 
 .sn-block--h2 {
-  padding-left: var(--dw-note-tab);
+  padding-left: 0;
   margin-block: 1.05em 0;
 }
 
@@ -115,7 +115,7 @@ img {
 .sn-block--h4,
 .sn-block--h5,
 .sn-block--h6 {
-  padding-left: calc(2 * var(--dw-note-tab));
+  padding-left: var(--dw-note-tab);
   margin-block: 0.85em 0;
 }
 
@@ -134,7 +134,7 @@ img {
 .sn-block--h3 + .sn-block--paragraph,
 .sn-block--h3 + .sn-block--paragraph + .sn-block--paragraph,
 .sn-block--h4 + .sn-block--paragraph {
-  padding-left: calc(2 * var(--dw-note-tab));
+  padding-left: var(--dw-note-tab);
 }
 
 .sn-block--quote {
@@ -147,7 +147,7 @@ img {
 }
 
 .sn-block--list {
-  padding-left: calc(2 * var(--dw-note-tab));
+  padding-left: var(--dw-note-tab);
   margin-block: 0.02em 0.04em;
 }
 

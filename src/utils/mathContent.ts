@@ -86,8 +86,8 @@ ${OUTFIT_FONT_CSS}
   }
   #content > *:first-child { margin-top: 0; }
   #content > *:last-child { margin-bottom: 0; }
-  p { margin: 0 0 6px; padding-left: 1.25em; }
-  ul, ol { margin: 4px 0 10px; padding-left: 2.5em; }
+  p { margin: 0 0 6px; padding-left: 0; }
+  ul, ol { margin: 4px 0 10px; padding-left: 1.25em; }
   ul ul, ol ol, ul ol, ol ul { margin: 4px 0 0; padding-left: 1.35em; }
   li { margin: 4px 0; line-height: 1.65; }
   li > ul, li > ol { margin-top: 4px; }
@@ -95,13 +95,13 @@ ${OUTFIT_FONT_CSS}
   
   h1, h2, h3, h4, h5, h6 { font-weight: 800; text-align: left; color: ${dark ? '#fafaf9' : '#0f172a'}; }
   h1 { font-size: 1.45em; line-height: 1.28; letter-spacing: -0.02em; margin: 0 0 10px; padding-left: 0; }
-  h2 { font-size: 1.22em; line-height: 1.32; letter-spacing: -0.015em; margin: 1.15em 0 0.05em; padding-left: 1.25em; }
-  h3 { font-size: 1.08em; line-height: 1.38; font-weight: 800; margin: 0.85em 0 0.04em; padding-left: 2.5em; }
-  h4 { font-size: 1.02em; line-height: 1.4; font-weight: 800; margin: 0.85em 0 0.04em; padding-left: 2.5em; }
-  h5 { font-size: 0.98em; line-height: 1.42; font-weight: 600; color: ${dark ? '#a8a29e' : '#57534e'}; margin: 0.75em 0 0.12em; padding-left: 2.5em; }
-  h6 { font-size: 0.88em; line-height: 1.45; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: ${dark ? '#a8a29e' : '#57534e'}; margin: 0.75em 0 0.12em; padding-left: 2.5em; }
+  h2 { font-size: 1.22em; line-height: 1.32; letter-spacing: -0.015em; margin: 1.15em 0 0.05em; padding-left: 0; }
+  h3 { font-size: 1.08em; line-height: 1.38; font-weight: 800; margin: 0.85em 0 0.04em; padding-left: 1.25em; }
+  h4 { font-size: 1.02em; line-height: 1.4; font-weight: 800; margin: 0.85em 0 0.04em; padding-left: 1.25em; }
+  h5 { font-size: 0.98em; line-height: 1.42; font-weight: 600; color: ${dark ? '#a8a29e' : '#57534e'}; margin: 0.75em 0 0.12em; padding-left: 1.25em; }
+  h6 { font-size: 0.88em; line-height: 1.45; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: ${dark ? '#a8a29e' : '#57534e'}; margin: 0.75em 0 0.12em; padding-left: 1.25em; }
   h1 + h2 { margin-top: 0.55em; }
-  h3 + p, h4 + p { padding-left: 2.5em; }
+  h3 + p, h4 + p { padding-left: 1.25em; }
   h1 strong, h2 strong, h3 strong, h4 strong, h5 strong, h6 strong { font-weight: inherit;${options.boldColor ? ' color: inherit;' : ''} }
   a { color: ${linkColor}; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: ${dark ? 'rgba(155,184,166,0.45)' : 'rgba(63,107,79,0.35)'}; }
   mark { background: ${dark ? '#27272A' : '#F3F1EC'}; color: ${fg}; padding: 1px 3px; border-radius: 3px; }
