@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 export interface OnboardingEnums {
   onboardingCategories: string[];
+  ageGroups: string[];
   graduateProgramTypes: string[];
   professionalSectors: string[];
   acquisitionSources: string[];
@@ -16,6 +17,7 @@ export interface OnboardingDraft {
   country?: string;
   preferredLanguage?: string;
   category: string;
+  ageGroup?: string | null;
   undergraduateCourse?: string | null;
   graduateProgram?: string | null;
   graduateProgramOtherDesc?: string | null;
@@ -39,6 +41,7 @@ interface OnboardingDraftState extends OnboardingDraft {
     country?: string;
   }) => void;
   setCategory: (category: string) => void;
+  setAgeGroup: (ageGroup: string | null) => void;
   setDetails: (payload: Partial<OnboardingDraft>) => void;
   setAcquisition: (acquisitionSource: string | null) => void;
   setEnums: (enums: OnboardingEnums) => void;
@@ -54,6 +57,7 @@ const initialDraft: OnboardingDraft = {
   country: '',
   preferredLanguage: 'en',
   category: '',
+  ageGroup: null,
   undergraduateCourse: null,
   graduateProgram: null,
   graduateProgramOtherDesc: null,
@@ -79,6 +83,7 @@ export const useOnboardingDraftStore = create<OnboardingDraftState>((set) => ({
     country: payload.country ?? state.country,
   })),
   setCategory: (category) => set({ category }),
+  setAgeGroup: (ageGroup) => set({ ageGroup }),
   setDetails: (payload) => set((state) => ({ ...state, ...payload })),
   setAcquisition: (acquisitionSource) => set({ acquisitionSource }),
   setEnums: (enums) => set({ enums }),

@@ -7,6 +7,14 @@ export const CATEGORY_LABELS: Record<string, string> = {
   OTHERS: 'Others',
 };
 
+export const AGE_GROUP_LABELS: Record<string, string> = {
+  UNDER_18: 'Under 18',
+  AGE_18_24: '18–24',
+  AGE_25_34: '25–34',
+  AGE_35_44: '35–44',
+  AGE_45_PLUS: '45+',
+};
+
 export const GRADUATE_PROGRAM_LABELS: Record<string, string> = {
   PROFESSIONAL_DEGREE: 'Professional Degree (Law / Medical / Architecture / etc.)',
   MASTERS_PROGRAM: "Master's Program",
@@ -54,6 +62,7 @@ type ProfileLike = {
   country?: string | null;
   college_name?: string | null;
   category?: string | null;
+  ageGroup?: string | null;
   preferredLanguage?: string | null;
   undergraduateCourse?: string | null;
   graduateProgram?: string | null;
@@ -97,6 +106,13 @@ export function getProfileContextFields(details: ProfileLike | null | undefined)
     fields.push({
       label: 'Purpose',
       value: CATEGORY_LABELS[category] || category,
+    });
+  }
+
+  if (details.ageGroup) {
+    fields.push({
+      label: 'Age group',
+      value: AGE_GROUP_LABELS[details.ageGroup] || details.ageGroup,
     });
   }
 
@@ -180,6 +196,7 @@ export function getProfileCompletion(details: ProfileLike | null | undefined) {
     { id: 'country', label: 'Country', done: hasTrimmed(details.country) },
     { id: 'language', label: 'Language', done: hasTrimmed(details.preferredLanguage) },
     { id: 'category', label: 'Purpose', done: hasTrimmed(details.category) },
+    { id: 'ageGroup', label: 'Age group', done: hasTrimmed(details.ageGroup) },
     { id: 'focus', label: 'Study focus', done: hasStudyFocus(details) },
     { id: 'source', label: 'How you found us', done: hasTrimmed(details.acquisitionSource) },
   ];

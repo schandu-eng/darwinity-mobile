@@ -2,6 +2,7 @@ import apiClient from '../client';
 
 export interface OnboardingEnumsResponse {
   onboardingCategories: string[];
+  ageGroups: string[];
   graduateProgramTypes: string[];
   professionalSectors: string[];
   acquisitionSources: string[];
@@ -14,6 +15,7 @@ export interface OnboardingRequest {
   countryCode?: string;
   country?: string;
   category: string;
+  ageGroup?: string | null;
   undergraduateCourse?: string | null;
   graduateProgram?: string | null;
   graduateProgramOtherDesc?: string | null;

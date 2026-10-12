@@ -43,6 +43,7 @@ export interface MemberProfileResponse {
   countryCode?: string;
   country?: string;
   category?: string;
+  ageGroup?: string | null;
   preferredLanguage?: string;
   undergraduateCourse?: string | null;
   graduateProgram?: string | null;

@@ -57,6 +57,7 @@ export const useSignup = () => {
       countryCode,
       country,
       category,
+      ageGroup,
       undergraduateCourse,
       graduateProgram,
       graduateProgramOtherDesc,
@@ -76,6 +77,7 @@ export const useSignup = () => {
       countryCode?: string;
       country?: string;
       category?: string;
+      ageGroup?: string | null;
       undergraduateCourse?: string | null;
       graduateProgram?: string | null;
       graduateProgramOtherDesc?: string | null;
@@ -96,6 +98,7 @@ export const useSignup = () => {
         countryCode,
         country,
         category,
+        ageGroup,
         undergraduateCourse,
         graduateProgram,
         graduateProgramOtherDesc,

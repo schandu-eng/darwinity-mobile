@@ -8,6 +8,7 @@ export interface User {
   country?: string;
   countryCode?: string;
   category?: string;
+  ageGroup?: string | null;
   undergraduateCourse?: string | null;
   graduateProgram?: string | null;
   graduateProgramOtherDesc?: string | null;

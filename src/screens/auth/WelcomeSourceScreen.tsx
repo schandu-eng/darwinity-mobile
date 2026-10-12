@@ -11,7 +11,7 @@ import { useOnboardingDraftStore } from '@/store';
 import { useAppTheme } from '@/store/appThemeStore';
 import { lightTheme, darkTheme } from '@/theme';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import { ACQUISITION_LABELS } from '@/utils/onboardingLabels';
+import { ACQUISITION_LABELS, AGE_GROUP_LABELS } from '@/utils/onboardingLabels';
 import { analytics } from '@/analytics/analytics';
 import { EVENTS } from '@/analytics/events';
 import { useAuthStore } from '@/store';
@@ -26,12 +26,15 @@ const WelcomeSourceScreen: React.FC = () => {
   const theme = themeMode === 'dark' ? darkTheme : lightTheme;
   const enums = useOnboardingDraftStore((state) => state.enums);
   const draft = useOnboardingDraftStore((state) => state);
+  const setAgeGroup = useOnboardingDraftStore((state) => state.setAgeGroup);
   const setAcquisition = useOnboardingDraftStore((state) => state.setAcquisition);
   const resetDraft = useOnboardingDraftStore((state) => state.reset);
   const signupMutation = useSignup();
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>(draft.ageGroup || '');
   const [selectedSource, setSelectedSource] = useState<string>('');
   const [error, setError] = useState('');
 
+  const ageGroups = useMemo(() => enums?.ageGroups || [], [enums]);
   const sources = useMemo(() => enums?.acquisitionSources || [], [enums]);
 
   const handleFinish = async () => {
@@ -56,6 +59,7 @@ const WelcomeSourceScreen: React.FC = () => {
       country: trimmedCountry,
       token: draft.token,
       category: draft.category,
+      ageGroup: selectedAgeGroup || null,
       undergraduateCourse: draft.undergraduateCourse,
       graduateProgram: draft.graduateProgram,
       graduateProgramOtherDesc: draft.graduateProgramOtherDesc,
@@ -84,6 +88,7 @@ const WelcomeSourceScreen: React.FC = () => {
     }
     analytics.track(EVENTS.SIGNUP_COMPLETED, { method: 'email', needs_onboarding: false });
 
+    setAgeGroup(selectedAgeGroup || null);
     setAcquisition(selectedSource || null);
     resetDraft();
   };
@@ -101,46 +106,91 @@ const WelcomeSourceScreen: React.FC = () => {
 
         <View style={styles.header}>
           <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onSurface }]}>
-            Where did you hear about us?
+            Almost done
           </Text>
           <Text variant="bodyMedium" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-            Optional. You can skip this step.
+            Optional details that help personalize Darwinity.
           </Text>
         </View>
 
-        <View style={styles.optionsContainer}>
-          {sources.map((source) => {
-            const isSelected = selectedSource === source;
-            return (
-              <TouchableOpacity
-                key={source}
-                style={[
-                  styles.optionCard,
-                  {
-                    borderColor: isSelected ? theme.colors.primary : theme.colors.outlineVariant,
-                    backgroundColor: isSelected
-                      ? theme.colors.primaryContainer
-                      : theme.colors.surface,
-                  },
-                ]}
-                onPress={() => setSelectedSource(isSelected ? '' : source)}
-                activeOpacity={0.8}
-              >
-                <Text
-                  variant="titleSmall"
-                  style={{
-                    color: isSelected
-                      ? theme.colors.onPrimaryContainer
-                      : theme.colors.onSurface,
-                    fontWeight: isSelected ? '600' : '500',
-                    fontFamily: Fonts.ui.regular,
-                  }}
+        <View style={styles.section}>
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Age group
+          </Text>
+          <View style={styles.optionsContainer}>
+            {ageGroups.map((group) => {
+              const isSelected = selectedAgeGroup === group;
+              return (
+                <TouchableOpacity
+                  key={group}
+                  style={[
+                    styles.optionCard,
+                    {
+                      borderColor: isSelected ? theme.colors.primary : theme.colors.outlineVariant,
+                      backgroundColor: isSelected
+                        ? theme.colors.primaryContainer
+                        : theme.colors.surface,
+                    },
+                  ]}
+                  onPress={() => setSelectedAgeGroup(isSelected ? '' : group)}
+                  activeOpacity={0.8}
                 >
-                  {ACQUISITION_LABELS[source] || source}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text
+                    variant="titleSmall"
+                    style={{
+                      color: isSelected
+                        ? theme.colors.onPrimaryContainer
+                        : theme.colors.onSurface,
+                      fontWeight: isSelected ? '600' : '500',
+                      fontFamily: Fonts.ui.regular,
+                    }}
+                  >
+                    {AGE_GROUP_LABELS[group] || group}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Where did you hear about us?
+          </Text>
+          <View style={styles.optionsContainer}>
+            {sources.map((source) => {
+              const isSelected = selectedSource === source;
+              return (
+                <TouchableOpacity
+                  key={source}
+                  style={[
+                    styles.optionCard,
+                    {
+                      borderColor: isSelected ? theme.colors.primary : theme.colors.outlineVariant,
+                      backgroundColor: isSelected
+                        ? theme.colors.primaryContainer
+                        : theme.colors.surface,
+                    },
+                  ]}
+                  onPress={() => setSelectedSource(isSelected ? '' : source)}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    variant="titleSmall"
+                    style={{
+                      color: isSelected
+                        ? theme.colors.onPrimaryContainer
+                        : theme.colors.onSurface,
+                      fontWeight: isSelected ? '600' : '500',
+                      fontFamily: Fonts.ui.regular,
+                    }}
+                  >
+                    {ACQUISITION_LABELS[source] || source}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         {error ? <ErrorBanner message={error} variant="compact" onDismiss={() => setError('')} /> : null}
@@ -203,6 +253,12 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
     fontFamily: Fonts.ui.regular,
+  },
+  section: {
+    gap: 12,
+  },
+  sectionTitle: {
+    fontFamily: Fonts.ui.semiBold,
   },
   optionsContainer: {
     gap: 12,

@@ -253,7 +253,8 @@ export const OnboardingDetailsContent: React.FC<DetailsContentProps> = ({
           professionalSectorOtherDesc:
             professionalSector === 'OTHERS' ? professionalSectorOtherDesc.trim() : null,
           otherBackgroundDesc: otherBackgroundDesc.trim() || null,
-          acquisitionSource: null,
+          ageGroup: user.ageGroup || null,
+          acquisitionSource: user.acquisitionSource || null,
         });
 
         if (!response.status) {
@@ -272,6 +273,7 @@ export const OnboardingDetailsContent: React.FC<DetailsContentProps> = ({
               country: profile.country,
               countryCode: profile.countryCode,
               category: profile.category,
+              ageGroup: profile.ageGroup,
               undergraduateCourse: profile.undergraduateCourse,
               graduateProgram: profile.graduateProgram,
               graduateProgramOtherDesc: profile.graduateProgramOtherDesc,
